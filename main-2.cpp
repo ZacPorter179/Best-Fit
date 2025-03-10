@@ -1,87 +1,93 @@
-#include <fstream>
-#include <iostream>
-#include <cmath>
-using namespace std;
-//1 FUNCTION TO READ XY AND STORE IN DYNAMIC ARRAY
-double *ReadData(const string &fileName, int &length){
-  ifstream inFile(fileName);
-  if(!inFile.is_open()) {
-    cout << "Error opening file " << fileName << endl;
-    exit(1);
+#include <fstream> // Include file stream library for file operations
+#include <iostream> // Include input/output stream library
+#include <cmath> // Include math library for mathematical operations
+using namespace std; // Use the standard namespace
+
+// FUNCTION TO READ XY AND STORE IN DYNAMIC ARRAY
+double *ReadData(const string &fileName, int &length) {
+  ifstream inFile(fileName); // Open the input file
+  if (!inFile.is_open()) { // Check if the file is opened successfully
+    cout << "Error opening file " << fileName << endl; // Print error message
+    exit(1); // Exit the program with an error code
   }
-  length = 0;
-  double d1, d2;
-  while (inFile >> d1 >> d2) {
-    ++length;
+  length = 0; // Initialize length variable
+  double d1, d2; // Variables to store data values
+  while (inFile >> d1 >> d2) { // Read two values per line
+    ++length; // Increment length count
   }
-  inFile.clear();
-  inFile.seekg(0, ios::beg);
-  double *data = new double[length * 2]; //TWO COLUMNS
-  for (int i = 0; i < length * 2; i += 2){
-    inFile >> data[i] >> data[i + 1];
+  inFile.clear(); // Clear end-of-file flag
+  inFile.seekg(0, ios::beg); // Reset file position to beginning
+  double *data = new double[length * 2]; // Allocate memory for data array (two columns)
+  for (int i = 0; i < length * 2; i += 2) { // Loop through array indices
+    inFile >> data[i] >> data[i + 1]; // Read x and y values into the array
   }
-  inFile.close();
-  return data; //COME BACK TO THIS LATER
+  inFile.close(); // Close the file
+  return data; // Return pointer to the allocated data array
 }
-//2 FUNCTION TO CALCULATE MEAN
-double CalcMean(const double *array, int length){
-  double sum = 0.0;
-  for (int i = 0; i < length; ++i){
-    sum += array[i];
+
+// FUNCTION TO CALCULATE MEAN
+double CalcMean(const double *array, int length) {
+  double sum = 0.0; // Initialize sum variable
+  for (int i = 0; i < length; ++i) { // Loop through array elements
+    sum += array[i]; // Add element to sum
   }
-  return sum / length;
+  return sum / length; // Return mean value
 }
-//3 FUNCTION TO CALCULATE FITM AND FITB
-void ComputeFit(const double *data, int length, double &fitm, double &fitb){
-  double sumx = 0.0, sumy = 0.0, sumxy = 0.0, sumxx = 0.0;
-  for (int i = 0; i < length *2; i += 2){
-    sumx += data[i];
-    sumy += data[i + 1];
-    sumxy += data[i] * data[i + 1];
-    sumxx += data[i] * data[i];
+
+// FUNCTION TO CALCULATE FITM AND FITB
+void ComputeFit(const double *data, int length, double &fitm, double &fitb) {
+  double sumx = 0.0, sumy = 0.0, sumxy = 0.0, sumxx = 0.0; // Initialize summation variables
+  for (int i = 0; i < length * 2; i += 2) { // Loop through data array (two columns)
+    sumx += data[i]; // Sum of x values
+    sumy += data[i + 1]; // Sum of y values
+    sumxy += data[i] * data[i + 1]; // Sum of x * y
+    sumxx += data[i] * data[i]; // Sum of x squared
   }
-  fitm = (length * sumxy - sumx * sumy) / (length * sumxx - sumx * sumx);
-  fitb = (sumy - fitm * sumx) / length;
+  fitm = (length * sumxy - sumx * sumy) / (length * sumxx - sumx * sumx); // Calculate slope (m)
+  fitb = (sumy - fitm * sumx) / length; // Calculate y-intercept (b)
 }
-//4 FUNCTION TO CALCULATE FITY
+
+// FUNCTION TO CALCULATE FITTED Y VALUES
 double *CalcFitY(const double *x, const double *y, int length, double fitm, double fitb) {
-  double *fity = new double[length];
-  for (int i = 0; i < length; ++i) {
-    fity[i] = fitm * x[i] + fitb;
+  double *fity = new double[length]; // Allocate memory for fitted y values
+  for (int i = 0; i < length; ++i) { // Loop through x values
+    fity[i] = fitm * x[i] + fitb; // Compute fitted y value
   }
-  return fity;
+  return fity; // Return pointer to fitted y values array
 }
-//5 FUNCTION TO WRITE 3 COLUMNS OF DATA TO FILE
-void WriteArraysToFile(const double *x, const double *y, const double *fity, int length, const string &fileName){
-  ofstream outFile(fileName);
-  if (!outFile.is_open()) {
-    cout << "Error opening file " << fileName << endl;
-    exit(1);
+
+// FUNCTION TO WRITE 3 COLUMNS OF DATA TO FILE
+void WriteArraysToFile(const double *x, const double *y, const double *fity, int length, const string &fileName) {
+  ofstream outFile(fileName); // Open output file
+  if (!outFile.is_open()) { // Check if file is opened successfully
+    cout << "Error opening file " << fileName << endl; // Print error message
+    exit(1); // Exit the program with an error code
   }
-  for (int i = 0; i < length; ++i) {
-    outFile << x[i] << " " << y[i] << " " << fity[i] << endl;
+  for (int i = 0; i < length; ++i) { // Loop through all data points
+    outFile << x[i] << " " << y[i] << " " << fity[i] << endl; // Write x, y, and fitted y to file
   }
-  outFile.close();
+  outFile.close(); // Close output file
 }
-//MAIN
+
+// MAIN FUNCTION
 int main() {
-  string filename = "numbers.txt";
-  int length;
-  double *data = ReadData(filename, length);
-  double fitm, fitb;
-  ComputeFit(data, length, fitm, fitb);
-  double *x = new double[length];
-  double *y = new double[length];
-  double *fity;
-  for (int i = 0; i < length; ++i) {
-    x[i] = data[i * 2];
-    y[i] = data[i * 2 + 1];
+  string filename = "numbers.txt"; // Define input file name
+  int length; // Variable to store number of data points
+  double *data = ReadData(filename, length); // Read data from file
+  double fitm, fitb; // Variables to store slope and intercept
+  ComputeFit(data, length, fitm, fitb); // Compute linear regression parameters
+  double *x = new double[length]; // Allocate memory for x values
+  double *y = new double[length]; // Allocate memory for y values
+  double *fity; // Pointer for fitted y values
+  for (int i = 0; i < length; ++i) { // Loop through data array
+    x[i] = data[i * 2]; // Extract x values
+    y[i] = data[i * 2 + 1]; // Extract y values
   }
-  fity = CalcFitY(x, y, length, fitm, fitb);
-  WriteArraysToFile(x, y, fity, length, "output.txt");
-  delete[] data;
-  delete[] x;
-  delete[] y;
-  delete[] fity;
-  return 0;
+  fity = CalcFitY(x, y, length, fitm, fitb); // Calculate fitted y values
+  WriteArraysToFile(x, y, fity, length, "output.txt"); // Write results to output file
+  delete[] data; // Free allocated memory for data
+  delete[] x; // Free allocated memory for x values
+  delete[] y; // Free allocated memory for y values
+  delete[] fity; // Free allocated memory for fitted y values
+  return 0; // Return successful execution code
 }
